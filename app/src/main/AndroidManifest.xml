@@ -1,0 +1,27 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="ar.edu.unpa.uarg.metricas">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme" />
+
+    <!-- PERMISOS REQUERIDOS POR LA LIBRERÍA ~ COMIENZO -->
+
+        <!-- Permisos requeridos para las métricas "intensidad de la señal" y "tipo de conexión" -->
+        <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Aunque la métrica "tipo de conexión" sólo requiere de este permiso -->
+        <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+        <!-- Permiso requerido para las métricas "getLatency", "getJitter" y "pérdida de paquetes" -->
+        <uses-permission android:name="android.permission.INTERNET" />
+
+        <!-- Permisos requeridos para poder manejar el archivo XML en el que se guardan las métricas -->
+        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <!-- PERMISOS REQUERIDOS POR LA LIBRERÍA ~ FINAL -->
+</manifest>
