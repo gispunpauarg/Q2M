@@ -28,36 +28,19 @@ import java.io.IOException;
  */
 public class Metricas implements android.hardware.SensorEventListener {
 
+    private static Metricas instanciaMetricas = null;
     private Context contextoAplicacion;
-
     private float lux;
     private float proximidad;
     private long latenciaPercibidaUsuario;
 
-    /**
-     * Tenga en cuenta que si no provee el contexto de la aplicación a la
-     * clase no podrá utilizar ciertas métricas que requieren de dicho
-     * parámetro para funcionar.
-     *
-     * @author Ariel Machini
-     * @see #Metricas(Context)
-     */
-    public Metricas() {
+    private Metricas() {
         this.latenciaPercibidaUsuario = Integer.MIN_VALUE;
 
         Log.w("Aviso", "Como no se tiene el contexto de la aplicación será imposible verificar que el usuario está dando los permisos necesarios a esta para el correcto funcionamiento de la librería.");
     }
 
-    /**
-     * @param contexto El contexto de la aplicación Android que va a hacer uso
-     *                 de los servicios de la clase. Este es necesario para
-     *                 obtener una serie de valores requeridos para generar los
-     *                 resultados de ciertas métricas, tales como el brillo
-     *                 actual de la pantalla y la luz del entorno en el que se
-     *                 encuentra el usuario.
-     * @author Ariel Machini
-     */
-    public Metricas(Context contexto) {
+    private Metricas(Context contexto) {
         this.contextoAplicacion = contexto;
         this.latenciaPercibidaUsuario = Integer.MIN_VALUE;
         SensorManager sensorManager = (SensorManager) this.contextoAplicacion.getSystemService(Context.SENSOR_SERVICE);
@@ -74,6 +57,65 @@ public class Metricas implements android.hardware.SensorEventListener {
         if (this.contextoAplicacion.checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_DENIED) {
             Log.e("Error", "No se podrá crear el archivo «metricas.xml» en el teléfono porque el usuario no brindó el permiso necesario (WRITE_EXTERNAL_STORAGE).");
         }
+    }
+
+
+    /**
+     * Destruye la instancia de la clase (<code>Metricas</code>) en el caso de
+     * que exista.
+     *
+     * @author Ariel Machini
+     * @see #getInstanceOf()
+     * @see #getInstanceOf(Context)
+     */
+    public static void destroyInstance() {
+        instanciaMetricas = null;
+    }
+
+    /**
+     * Retorna una instancia de la clase <code>Metricas</code>.
+     * Si ya se había creado una instancia con anterioridad, este método
+     * simplemente retorna la instancia existente; por lo que si la primera
+     * vez que pidió una instancia lo hizo con el método
+     * <code>Metricas.getInstanceOf(Context)</code> se recomienda recuperar
+     * dicha instancia con este método (<code>Metricas.getInstanceOf()</code>)
+     * para su comodidad: Así no tendrá que proveer el contexto de la
+     * aplicación cada vez que quiera recuperar la instancia de la clase.
+     * Ahora, si es la primera vez que va a pedir una instancia de esta clase,
+     * tenga en cuenta que si no provee el contexto de la aplicación no podrá
+     * utilizar la mayor parte de las métricas, ya que requieren de dicho
+     * parámetro para funcionar.
+     *
+     * @author Ariel Machini
+     * @see #getInstanceOf(Context)
+     */
+    public static Metricas getInstanceOf() {
+        if (instanciaMetricas == null) {
+            instanciaMetricas = new Metricas();
+        }
+
+        return instanciaMetricas;
+    }
+
+    /**
+     * Retorna una instancia de la clase <code>Metricas</code>.
+     * Si ya se había creado una instancia con anterioridad, este método
+     * simplemente retorna la instancia existente.
+     *
+     * @param contexto El contexto de la aplicación Android que va a hacer uso
+     *                 de los servicios de la clase. Este es necesario para
+     *                 obtener una serie de valores requeridos para generar los
+     *                 resultados de ciertas métricas, tales como el brillo
+     *                 actual de la pantalla y la luz del entorno en el que se
+     *                 encuentra el usuario.
+     * @author Ariel Machini
+     */
+    public static Metricas getInstanceOf(Context contexto) {
+        if (instanciaMetricas == null) {
+            instanciaMetricas = new Metricas(contexto);
+        }
+
+        return instanciaMetricas;
     }
 
     /* * * Acá comienzan los métodos heredados * * */
@@ -795,9 +837,9 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoE) Verifica que el teléfono esté conectado
      * (independientemente si tiene conexión a internet o no) a una red.
      *
-     * @author Ariel Machini
      * @return <code>true</code> si el teléfono está conectado a una red y
      * <code>false</code> en caso contrario.
+     * @author Ariel Machini
      */
     public boolean isPhoneConnected() {
         if (this.contextoAplicacion != null) {
