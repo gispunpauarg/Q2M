@@ -23,8 +23,8 @@ import java.io.IOException;
  * de experiencia de usuario (QoE) a cualquier aplicación móvil para Android.
  *
  * @author Ariel Machini
- * @see #Metricas()
- * @see #Metricas(Context)
+ * @see #createInstance(Context)
+ * @see #createInstance()
  */
 public class Metricas implements android.hardware.SensorEventListener {
 
@@ -59,37 +59,22 @@ public class Metricas implements android.hardware.SensorEventListener {
         }
     }
 
-
     /**
-     * Destruye la instancia de la clase (<code>Metricas</code>) en el caso de
-     * que exista.
-     *
-     * @author Ariel Machini
-     * @see #getInstanceOf()
-     * @see #getInstanceOf(Context)
-     */
-    public static void destroyInstance() {
-        instanciaMetricas = null;
-    }
-
-    /**
-     * Retorna una instancia de la clase <code>Metricas</code>.
+     * Crea y retorna una instancia de la clase <code>Metricas</code>.
      * Si ya se había creado una instancia con anterioridad, este método
-     * simplemente retorna la instancia existente; por lo que si la primera
-     * vez que pidió una instancia lo hizo con el método
-     * <code>Metricas.getInstanceOf(Context)</code> se recomienda recuperar
-     * dicha instancia con este método (<code>Metricas.getInstanceOf()</code>)
-     * para su comodidad: Así no tendrá que proveer el contexto de la
-     * aplicación cada vez que quiera recuperar la instancia de la clase.
-     * Ahora, si es la primera vez que va a pedir una instancia de esta clase,
-     * tenga en cuenta que si no provee el contexto de la aplicación no podrá
+     * simplemente retorna la instancia existente.
+     * Tenga en cuenta que si no provee el contexto de la aplicación no podrá
      * utilizar la mayor parte de las métricas, ya que requieren de dicho
-     * parámetro para funcionar.
+     * parámetro para funcionar; Por lo tanto, se recomienda utilizar el método
+     * createInstance(Context).
      *
      * @author Ariel Machini
-     * @see #getInstanceOf(Context)
+     * @return La instancia de la clase <code>Metricas</code> que se creó.
+     * @see #createInstance(Context)
+     * @see #destroyInstance()
+     * @see #getInstanceOf()
      */
-    public static Metricas getInstanceOf() {
+    public static Metricas createInstance() {
         if (instanciaMetricas == null) {
             instanciaMetricas = new Metricas();
         }
@@ -98,21 +83,57 @@ public class Metricas implements android.hardware.SensorEventListener {
     }
 
     /**
-     * Retorna una instancia de la clase <code>Metricas</code>.
+     * Crea y retorna una instancia de la clase <code>Metricas</code>.
      * Si ya se había creado una instancia con anterioridad, este método
      * simplemente retorna la instancia existente.
      *
+     * @author Ariel Machini
      * @param contexto El contexto de la aplicación Android que va a hacer uso
      *                 de los servicios de la clase. Este es necesario para
      *                 obtener una serie de valores requeridos para generar los
      *                 resultados de ciertas métricas, tales como el brillo
      *                 actual de la pantalla y la luz del entorno en el que se
      *                 encuentra el usuario.
-     * @author Ariel Machini
+     * @return La instancia de la clase <code>Metricas</code> que se creó.
+     * @see #createInstance()
+     * @see #destroyInstance()
+     * @see #getInstanceOf()
      */
-    public static Metricas getInstanceOf(Context contexto) {
+    public static Metricas createInstance(Context contexto) {
         if (instanciaMetricas == null) {
             instanciaMetricas = new Metricas(contexto);
+        }
+
+        return instanciaMetricas;
+    }
+
+    /**
+     * Destruye la instancia de la clase (<code>Metricas</code>) en el caso de
+     * que exista.
+     *
+     * @author Ariel Machini
+     * @see #createInstance(Context)
+     * @see #createInstance()
+     * @see #getInstanceOf()
+     */
+    public static void destroyInstance() {
+        instanciaMetricas = null;
+    }
+
+    /**
+     * Retorna la instancia de la clase (<code>Metricas</code>) en el caso de
+     * que exista.
+     *
+     * @author Ariel Machini
+     * @return La instancia de la clase <code>Metricas</code> o
+     * <code>null</code> en caso de que no haya sido creada.
+     * @see #createInstance(Context)
+     * @see #createInstance()
+     * @see #destroyInstance()
+     */
+    public static Metricas getInstanceOf() {
+        if (instanciaMetricas == null) {
+            Log.w("Instancia de la clase", "Todavía no se creó la instancia de la clase; Retornando null. Para crear una instancia utilice uno de los métodos createInstance.");
         }
 
         return instanciaMetricas;
@@ -164,9 +185,9 @@ public class Metricas implements android.hardware.SensorEventListener {
      * ocupando la aplicación. Si bien no es el mejor resultado, es lo más
      * preciso que se puede obtener.
      *
+     * @author Ariel Machini
      * @return El porcentaje en uso de la CPU por la aplicación. Retorna -1 si
      * ocurre algún error durante la obtención de dicho porcentaje.
-     * @author Ariel Machini
      */
     public double getAppCPUUsage() {
         if (this.contextoAplicacion != null) {
@@ -231,10 +252,10 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoE) Retorna el porcentaje de carga actual de la batería del
      * teléfono.
      *
+     * @author Ariel Machini
      * @return El porcentaje de carga (de 0% a 100%) del teléfono en el que se
      * está ejecutando la aplicación. Retorna -1 si no se puede obtener el
      * valor por alguna causa.
-     * @author Ariel Machini
      */
     public int getBatteryPercentage() {
         if (this.contextoAplicacion != null) {
@@ -257,9 +278,9 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoE) Retorna el tipo de conexión que está utilizando el usuario
      * mientras utiliza la aplicación.
      *
+     * @author Ariel Machini
      * @return El nombre del tipo de conexión que esté usando el usuario. Retorna
      * <code>null</code> si no se puede obtener el valor por alguna causa.
-     * @author Ariel Machini
      */
     public String getConnectionType() {
         if (this.contextoAplicacion != null) {
@@ -324,9 +345,9 @@ public class Metricas implements android.hardware.SensorEventListener {
      * y retorna el valor en lx (lux). Para aprender más sobre la unidad de
      * medida lux visite https://es.wikipedia.org/wiki/Lux.
      *
+     * @author Ariel Machini
      * @return El nivel de luz del entorno en lx. Retorna -1 si no se puede
      * obtener el valor por alguna causa.
-     * @author Ariel Machini
      */
     public float getEnvironmentLight() {
         if (this.contextoAplicacion != null) {
@@ -344,11 +365,11 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoS) Calcula el getJitter en la comunicación a una dirección de IP
      * determinada y lo retorna.
      *
+     * @author Ariel Machini
      * @param direccionIP La dirección de IP (IPv4 o IPv6) que se va a utilizar
      *                    para ejecutar la métrica.
      * @return El getJitter calculado. Retorna -1 si ocurre algún problema en
      * la comunicación entre el celular y el host especificado.
-     * @author Ariel Machini
      */
     public double getJitter(String direccionIP) {
         if (this.contextoAplicacion != null) {
@@ -423,11 +444,11 @@ public class Metricas implements android.hardware.SensorEventListener {
     /**
      * (Métrica QoS) Mide la latencia a una dirección de IP determinada.
      *
+     * @author Ariel Machini
      * @param direccionIP La dirección de IP (IPv4 o IPv6) que se va a utilizar
      *                    para ejecutar la métrica.
      * @return La latencia en milisegundos. Retorna -1 si ocurre algún
      * problema en la comunicación entre el celular y el host especificado.
-     * @author Ariel Machini
      */
     public double getLatency(String direccionIP) {
         if (this.contextoAplicacion != null) {
@@ -491,11 +512,11 @@ public class Metricas implements android.hardware.SensorEventListener {
      * Cabe mencionar que para determinar la pérdida de paquetes se hace ping
      * cinco veces a la dirección de IP recibida por parámetros.
      *
+     * @author Ariel Machini
      * @param direccionIP La dirección de IP (IPv4 o IPv6) que se va a utilizar
      *                    para ejecutar la métrica.
      * @return El porcentaje de paquetes perdidos. Retorna -1 si ocurre algún
      * problema en la comunicación entre el celular y el host especificado.
-     * @author Ariel Machini
      */
     public int getPacketLoss(String direccionIP) {
         if (this.contextoAplicacion != null) {
@@ -556,13 +577,13 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoS) Controla la pérdida de paquetes en la comunicación con una
      * dirección de IP determinada.
      *
+     * @author Ariel Machini
      * @param direccionIP        La dirección de IP (IPv4 o IPv6) que se va a utilizar
      *                           para ejecutar la métrica.
      * @param numeroRepeticiones Cantidad de veces que se va a hacer ping a la
      *                           dirección de IP recibida por parámetros.
      * @return El porcentaje de paquetes perdidos. Retorna -1 si ocurre algún
      * problema en la comunicación entre el celular y el host especificado.
-     * @author Ariel Machini
      */
     public int getPacketLoss(String direccionIP, int numeroRepeticiones) {
         if (this.contextoAplicacion != null) {
@@ -623,9 +644,9 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoE) Mide y retorna la getProximity entre el dispositivo y el
      * usuario.
      *
+     * @author Ariel Machini
      * @return La proximidad en centímetros. Retorna -1 si no se puede obtener
      * el valor por alguna causa.
-     * @author Ariel Machini
      */
     public float getProximity() {
         if (this.contextoAplicacion != null) {
@@ -643,10 +664,10 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoE) Retorna el porcentaje de brillo de la pantalla del
      * teléfono del usuario.
      *
+     * @author Ariel Machini
      * @return El porcentaje de brillo (de 0% a 100%) de la pantalla del
      * teléfono a través de la cual se visualiza la aplicación. Retorna -1 si
      * no se puede obtener el valor por alguna causa.
-     * @author Ariel Machini
      */
     public int getScreenBrightness() {
         if (this.contextoAplicacion != null) {
@@ -684,11 +705,11 @@ public class Metricas implements android.hardware.SensorEventListener {
      * NOTA: Si el valor que recibe de este método es 1, entonces el tipo de
      * conexión que está utilizando el usuario NO es inalámbrica.
      *
+     * @author Ariel Machini
      * @return La potencia en dBm de la señal a la que el usuario está
      * conectado. Retorna 1 si no se puede obtener el valor por alguna causa
      * (esto es así porque el valor en dBm de la intensidad de la señal nunca
      * va a ser mayor que 0, por lo tanto 1 es un valor imposible).
-     * @author Ariel Machini
      */
     public int getSignalStrength() {
         if (this.contextoAplicacion != null) {
@@ -756,9 +777,9 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoE) Calcula y retorna la cantidad de MB de la memoria RAM del
      * teléfono que están en uso.
      *
+     * @author Ariel Machini
      * @return La cantidad de MB en uso de la memoria RAM. Retorna -1 si no se
      * puede obtener el valor por alguna causa.
-     * @author Ariel Machini
      */
     public double getTotalMemoryUsageMB() {
         if (this.contextoAplicacion != null) {
@@ -783,9 +804,9 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoE) Calcula y retorna el porcentaje de la memoria RAM del
      * teléfono que está en uso.
      *
+     * @author Ariel Machini
      * @return El porcentaje en uso de la memoria RAM. Retorna -1 si no se
      * puede obtener el valor por alguna causa.
-     * @author Ariel Machini
      */
     public double getTotalMemoryUsagePercentage() {
         if (this.contextoAplicacion != null) {
@@ -811,9 +832,9 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoE) Reporta si el teléfono está cargando (ya sea por conexión
      * CA, USB o inalámbricamente) o no.
      *
+     * @author Ariel Machini
      * @return <code>true</code> si el teléfono está cargando y
      * <code>false</code> en caso contrario.
-     * @author Ariel Machini
      */
     public boolean isPhoneCharging() {
         if (this.contextoAplicacion != null) {
@@ -837,9 +858,9 @@ public class Metricas implements android.hardware.SensorEventListener {
      * (Métrica QoE) Verifica que el teléfono esté conectado
      * (independientemente si tiene conexión a internet o no) a una red.
      *
+     * @author Ariel Machini
      * @return <code>true</code> si el teléfono está conectado a una red y
      * <code>false</code> en caso contrario.
-     * @author Ariel Machini
      */
     public boolean isPhoneConnected() {
         if (this.contextoAplicacion != null) {
@@ -881,10 +902,10 @@ public class Metricas implements android.hardware.SensorEventListener {
      * cuando se haya llamado a <code>perceivedLatencyBegin()</code> primero.
      * Retorna la latencia percibida por el usuario en segundos.
      *
+     * @author Ariel Machini
      * @return La latencia percibida por el usuario en segundos. Retorna
      * -1 si no se llamó al método <code>perceivedLatencyBegin()</code>
      * primero.
-     * @author Ariel Machini
      * @see #perceivedLatencyBegin()
      */
     public long perceivedLatencyStop() {
