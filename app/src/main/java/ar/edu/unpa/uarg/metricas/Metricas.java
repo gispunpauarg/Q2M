@@ -218,7 +218,7 @@ public class Metricas implements android.hardware.SensorEventListener {
 
         int cargaActual = (estadoBateria.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) * 100) / estadoBateria.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-        ConstructorXML.adjuntarMetrica("batteryCharge%", String.valueOf(cargaActual));
+        ConstructorXML.adjuntarMetrica("BatteryCharge%", String.valueOf(cargaActual));
 
         return cargaActual;
     }
@@ -234,7 +234,7 @@ public class Metricas implements android.hardware.SensorEventListener {
         ConnectivityManager connectivityManager = (ConnectivityManager) this.contextoAplicacion.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         if (connectivityManager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_WIFI) {
-            ConstructorXML.adjuntarMetrica("connectionType", "Wi-Fi");
+            ConstructorXML.adjuntarMetrica("ConnectionType", "Wi-Fi");
 
             return "Wi-Fi";
         } else if (connectivityManager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_MOBILE) {
@@ -242,29 +242,29 @@ public class Metricas implements android.hardware.SensorEventListener {
             switch (connectivityManager.getActiveNetworkInfo().getSubtype()) {
 
                 case TelephonyManager.NETWORK_TYPE_EDGE:
-                    ConstructorXML.adjuntarMetrica("connectionType", "EDGE");
+                    ConstructorXML.adjuntarMetrica("ConnectionType", "EDGE");
                     return "EDGE";
 
                 case TelephonyManager.NETWORK_TYPE_GPRS:
-                    ConstructorXML.adjuntarMetrica("connectionType", "GPRS");
+                    ConstructorXML.adjuntarMetrica("ConnectionType", "GPRS");
                     return "GPRS";
 
                 case TelephonyManager.NETWORK_TYPE_IDEN:
-                    ConstructorXML.adjuntarMetrica("connectionType", "2G");
+                    ConstructorXML.adjuntarMetrica("ConnectionType", "2G");
                     return "2G";
 
                 case TelephonyManager.NETWORK_TYPE_HSPAP:
-                    ConstructorXML.adjuntarMetrica("connectionType", "3G");
+                    ConstructorXML.adjuntarMetrica("ConnectionType", "3G");
                     return "3G";
 
                 case TelephonyManager.NETWORK_TYPE_LTE:
-                    ConstructorXML.adjuntarMetrica("connectionType", "4G");
+                    ConstructorXML.adjuntarMetrica("ConnectionType", "4G");
                     return "4G";
 
                 default: // Si el tipo de conexión no está contemplado arriba, se retorna igual.
                     String tipoConexion = connectivityManager.getActiveNetworkInfo().getSubtypeName();
 
-                    ConstructorXML.adjuntarMetrica("connectionType", tipoConexion);
+                    ConstructorXML.adjuntarMetrica("ConnectionType", tipoConexion);
 
                     return tipoConexion;
             }
@@ -276,7 +276,7 @@ public class Metricas implements android.hardware.SensorEventListener {
              * posibilidad por más mínima que sea agregando este último «else». */
             String tipoConexion = connectivityManager.getActiveNetworkInfo().getTypeName();
 
-            ConstructorXML.adjuntarMetrica("connectionType", tipoConexion);
+            ConstructorXML.adjuntarMetrica("ConnectionType", tipoConexion);
 
             return tipoConexion;
         }
@@ -291,7 +291,7 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @author Ariel Machini
      */
     public float getEnvironmentLight() {
-        ConstructorXML.adjuntarMetrica("environmentLightLx", String.valueOf(this.lux));
+        ConstructorXML.adjuntarMetrica("EnvironmentLight", String.valueOf(this.lux));
 
         return this.lux;
     }
@@ -330,7 +330,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                         latencias.add(milisegundos);
                     }
                 } else if (codigoSalida == 1) {
-                    ConstructorXML.adjuntarMetrica("jitter", "Sin respuesta");
+                    ConstructorXML.adjuntarMetrica("Jitter", "Sin respuesta");
 
                     return -1;
                 } else {
@@ -352,7 +352,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                  * suma. */
                 double jitter = (Math.abs(latencias.get(1) - latencias.get(0)) + Math.abs(latencias.get(2) - latencias.get(1)) + Math.abs(latencias.get(3) - latencias.get(2))) / 3;
 
-                ConstructorXML.adjuntarMetrica("jitter", String.valueOf(jitter));
+                ConstructorXML.adjuntarMetrica("Jitter", String.valueOf(jitter));
 
                 return jitter;
             } catch (IndexOutOfBoundsException e) {
@@ -403,7 +403,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                         break;
                     }
                 } else if (codigoSalida == 1) {
-                    ConstructorXML.adjuntarMetrica("latency", "Sin respuesta");
+                    ConstructorXML.adjuntarMetrica("Latency", "Sin respuesta");
 
                     return -1;
                 } else {
@@ -419,7 +419,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                 proceso.destroy();
             }
 
-            ConstructorXML.adjuntarMetrica("latency", String.valueOf(milisegundos));
+            ConstructorXML.adjuntarMetrica("Latency", String.valueOf(milisegundos));
 
             return milisegundos;
         } else {
@@ -480,7 +480,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                 proceso.destroy();
             }
 
-            ConstructorXML.adjuntarMetrica("packetLoss%", String.valueOf(paquetesPerdidos));
+            ConstructorXML.adjuntarMetrica("PacketLoss%", String.valueOf(paquetesPerdidos));
 
             return paquetesPerdidos;
         } else {
@@ -541,7 +541,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                 proceso.destroy();
             }
 
-            ConstructorXML.adjuntarMetrica("packetLoss%", String.valueOf(paquetesPerdidos));
+            ConstructorXML.adjuntarMetrica("PacketLoss%", String.valueOf(paquetesPerdidos));
 
             return paquetesPerdidos;
         } else {
@@ -559,7 +559,7 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @author Ariel Machini
      */
     public float getProximity() {
-        ConstructorXML.adjuntarMetrica("proximityCentimeters", String.valueOf(this.proximidad));
+        ConstructorXML.adjuntarMetrica("Proximity", String.valueOf(this.proximidad));
 
         return this.proximidad;
     }
@@ -592,7 +592,7 @@ public class Metricas implements android.hardware.SensorEventListener {
              * el método), es necesario hacer la siguiente operación: */
             porcentajeBrillo = porcentajeBrillo * 100 / 255;
 
-            ConstructorXML.adjuntarMetrica("screenBrightness%", String.valueOf(porcentajeBrillo));
+            ConstructorXML.adjuntarMetrica("ScreenBrightness%", String.valueOf(porcentajeBrillo));
         }
 
         return porcentajeBrillo;
@@ -617,7 +617,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                 WifiManager wifiManager = (WifiManager) this.contextoAplicacion.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 int dBm = wifiManager.getConnectionInfo().getRssi();
 
-                ConstructorXML.adjuntarMetrica("signalStrengthdBm", String.valueOf(dBm));
+                ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
 
                 return dBm;
             } else if (connectivityManager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_MOBILE) {
@@ -627,25 +627,25 @@ public class Metricas implements android.hardware.SensorEventListener {
                 if (cellInfo instanceof CellInfoLte) {
                     int dBm = ((CellInfoLte) cellInfo).getCellSignalStrength().getDbm();
 
-                    ConstructorXML.adjuntarMetrica("signalStrengthdBm", String.valueOf(dBm));
+                    ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
 
                     return dBm;
                 } else if (cellInfo instanceof CellInfoGsm) {
                     int dBm = ((CellInfoGsm) cellInfo).getCellSignalStrength().getDbm();
 
-                    ConstructorXML.adjuntarMetrica("signalStrengthdBm", String.valueOf(dBm));
+                    ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
 
                     return dBm;
                 } else if (cellInfo instanceof CellInfoCdma) {
                     int dBm = ((CellInfoCdma) cellInfo).getCellSignalStrength().getDbm();
 
-                    ConstructorXML.adjuntarMetrica("signalStrengthdBm", String.valueOf(dBm));
+                    ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
 
                     return dBm;
                 } else if (cellInfo instanceof CellInfoWcdma) {
                     int dBm = ((CellInfoWcdma) cellInfo).getCellSignalStrength().getDbm();
 
-                    ConstructorXML.adjuntarMetrica("signalStrengthdBm", String.valueOf(dBm));
+                    ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
 
                     return dBm;
                 } else {
@@ -680,7 +680,7 @@ public class Metricas implements android.hardware.SensorEventListener {
 
         double memoriaEnUso = (memoryInfo.totalMem / 0x100000L) - (memoryInfo.availMem / 0x100000L);
 
-        ConstructorXML.adjuntarMetrica("memoryConsumptionMB", String.valueOf(memoriaEnUso));
+        ConstructorXML.adjuntarMetrica("MemoryConsumptionMB", String.valueOf(memoriaEnUso));
 
         return memoriaEnUso;
     }
@@ -701,7 +701,7 @@ public class Metricas implements android.hardware.SensorEventListener {
         double memoriaEnUso = (memoryInfo.totalMem / 0x100000L) - (memoryInfo.availMem / 0x100000L);
         double porcentajeEnUso = memoriaEnUso * 100 / (memoryInfo.totalMem / 0x100000L);
 
-        ConstructorXML.adjuntarMetrica("memoryConsumption%", String.valueOf(porcentajeEnUso));
+        ConstructorXML.adjuntarMetrica("MemoryConsumption%", String.valueOf(porcentajeEnUso));
 
         return porcentajeEnUso;
     }
@@ -721,7 +721,7 @@ public class Metricas implements android.hardware.SensorEventListener {
 
         boolean estaConectado = (tipoConexion == BatteryManager.BATTERY_PLUGGED_AC || tipoConexion == BatteryManager.BATTERY_PLUGGED_USB || tipoConexion == BatteryManager.BATTERY_PLUGGED_WIRELESS);
 
-        ConstructorXML.adjuntarMetrica("phoneCharging", String.valueOf(estaConectado));
+        ConstructorXML.adjuntarMetrica("PhoneCharging", String.valueOf(estaConectado));
 
         return estaConectado;
     }
@@ -737,7 +737,7 @@ public class Metricas implements android.hardware.SensorEventListener {
     public boolean isPhoneConnected() {
         boolean isPhoneConnected = this.isActiveNetworkInfoNotNull();
 
-        ConstructorXML.adjuntarMetrica("phoneConnectedToANetwork", String.valueOf(isPhoneConnected));
+        ConstructorXML.adjuntarMetrica("PhoneConnectedToANetwork", String.valueOf(isPhoneConnected));
 
         return isPhoneConnected;
     }
@@ -778,7 +778,7 @@ public class Metricas implements android.hardware.SensorEventListener {
         if (this.latenciaPercibidaUsuario != Integer.MIN_VALUE) {
             long latenciaPercibidaFinal = (System.currentTimeMillis() - this.latenciaPercibidaUsuario) / 1000;
 
-            ConstructorXML.adjuntarMetrica("userPerceivedLatencySeconds", String.valueOf(latenciaPercibidaFinal));
+            ConstructorXML.adjuntarMetrica("UserPerceivedLatency", String.valueOf(latenciaPercibidaFinal));
 
             /* Se restaura el valor de esta variable para que en posteriores
              * ejecuciones de la misma métrica no se pueda llamar a este
