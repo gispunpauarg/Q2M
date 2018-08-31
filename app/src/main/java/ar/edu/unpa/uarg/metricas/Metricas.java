@@ -151,7 +151,7 @@ public class Metricas implements android.hardware.SensorEventListener {
      * ocurre algún error durante la obtención de dicho porcentaje.
      * @author Ariel Machini
      */
-    public double getAppCPUUsage() {
+    public double getCPUConsumption() {
         ActivityManager activityManager = (ActivityManager) this.contextoAplicacion.getSystemService(Context.ACTIVITY_SERVICE);
         java.util.List<ActivityManager.RunningAppProcessInfo> listaProcesos = activityManager.getRunningAppProcesses();
         int PIDaplicacion = -1;
@@ -187,19 +187,19 @@ public class Metricas implements android.hardware.SensorEventListener {
                     }
                 }
             } else {
-                Log.e("Error", "Ocurrió un error durante la ejecución del proceso «getAppCPUUsage» (cód. " + codigoSalida + ").");
+                Log.e("Error", "Ocurrió un error durante la ejecución del proceso «getCPUConsumption» (cód. " + codigoSalida + ").");
 
                 return -1;
             }
         } catch (IOException e) {
-            Log.e("Error", "Se produjo un error de E/S durante la ejecución del método «getAppCPUUsage».");
+            Log.e("Error", "Se produjo un error de E/S durante la ejecución del método «getCPUConsumption».");
         } catch (InterruptedException e) {
-            Log.e("Error", "No se pudo terminar con la ejecución del método «getAppCPUUsage» porque esta fue interrumpida.");
+            Log.e("Error", "No se pudo terminar con la ejecución del método «getCPUConsumption» porque esta fue interrumpida.");
         } finally {
             proceso.destroy();
         }
 
-        ConstructorXML.adjuntarMetrica("applicationCPUUsage%", String.valueOf(usoCPU));
+        ConstructorXML.adjuntarMetrica("CPUConsumption%", String.valueOf(usoCPU));
 
         return usoCPU;
     }
@@ -672,7 +672,7 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @return La cantidad de MB en uso de la memoria RAM.
      * @author Ariel Machini
      */
-    public double getTotalMemoryUsageMB() {
+    public double getMemoryConsumptionMB() {
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
         ActivityManager activityManager = (ActivityManager) this.contextoAplicacion.getSystemService(Context.ACTIVITY_SERVICE);
 
@@ -680,7 +680,7 @@ public class Metricas implements android.hardware.SensorEventListener {
 
         double memoriaEnUso = (memoryInfo.totalMem / 0x100000L) - (memoryInfo.availMem / 0x100000L);
 
-        ConstructorXML.adjuntarMetrica("memoryUsedMB", String.valueOf(memoriaEnUso));
+        ConstructorXML.adjuntarMetrica("memoryConsumptionMB", String.valueOf(memoriaEnUso));
 
         return memoriaEnUso;
     }
@@ -692,7 +692,7 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @return El porcentaje en uso de la memoria RAM.
      * @author Ariel Machini
      */
-    public double getTotalMemoryUsagePercentage() {
+    public double getMemoryConsumptionPercentage() {
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
         ActivityManager activityManager = (ActivityManager) this.contextoAplicacion.getSystemService(Context.ACTIVITY_SERVICE);
 
@@ -701,7 +701,7 @@ public class Metricas implements android.hardware.SensorEventListener {
         double memoriaEnUso = (memoryInfo.totalMem / 0x100000L) - (memoryInfo.availMem / 0x100000L);
         double porcentajeEnUso = memoriaEnUso * 100 / (memoryInfo.totalMem / 0x100000L);
 
-        ConstructorXML.adjuntarMetrica("memoryUsed%", String.valueOf(porcentajeEnUso));
+        ConstructorXML.adjuntarMetrica("memoryConsumption%", String.valueOf(porcentajeEnUso));
 
         return porcentajeEnUso;
     }
@@ -778,7 +778,7 @@ public class Metricas implements android.hardware.SensorEventListener {
         if (this.latenciaPercibidaUsuario != Integer.MIN_VALUE) {
             long latenciaPercibidaFinal = (System.currentTimeMillis() - this.latenciaPercibidaUsuario) / 1000;
 
-            ConstructorXML.adjuntarMetrica("perceivedLatencySeconds", String.valueOf(latenciaPercibidaFinal));
+            ConstructorXML.adjuntarMetrica("userPerceivedLatencySeconds", String.valueOf(latenciaPercibidaFinal));
 
             /* Se restaura el valor de esta variable para que en posteriores
              * ejecuciones de la misma métrica no se pueda llamar a este
