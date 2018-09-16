@@ -9,6 +9,7 @@ import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
+import android.provider.Settings;
 import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
@@ -567,6 +568,10 @@ public class Metricas implements android.hardware.SensorEventListener {
     /**
      * (Métrica QoE) Retorna el porcentaje de brillo de la pantalla del
      * teléfono del usuario.
+     * NOTA: Esta métrica sólo retornará un valor correcto si el usuario no
+     * tiene la funcionalidad conocida como "brillo adaptivo" habilitada en su
+     * teléfono. En caso contrario (debido a una limitación del sistema
+     * operativo) es imposible obtener un valor acertado.
      *
      * @return El porcentaje de brillo (de 0% a 100%) de la pantalla del
      * teléfono a través de la cual se visualiza la aplicación. Retorna -1 si
@@ -574,26 +579,18 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @author Ariel Machini
      */
     public int getScreenBrightness() {
-        int porcentajeBrillo = -1;
+        int porcentajeBrillo = android.provider.Settings.System.getInt(this.contextoAplicacion.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, -1);
 
-        try {
-            porcentajeBrillo = android.provider.Settings.System.getInt(this.contextoAplicacion.getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
-        } catch (android.provider.Settings.SettingNotFoundException e) {
-            Log.e("Error", "Se produjo una excepción de tipo SettingNotFoundException dentro del método «getScreenBrightness».");
-        }
+        /* Para entender el porqué de esta cuenta, es necesario saber que
+        * Settings.System.SCREEN_BRIGHTNESS retorna el valor del brillo
+        * actual de la pantalla dentro de un rango que va de 0 a 255.
+        * FUENTE: https://developer.android.com/reference/android/provider/Settings.System.html#SCREEN_BRIGHTNESS
+        *
+        * Para poder devolver el porcentaje (que es lo que debe retornar
+        * el método), es necesario hacer la siguiente operación: */
+        porcentajeBrillo = porcentajeBrillo * 100 / 255;
 
-        if (porcentajeBrillo != -1) {
-            /* Para entender el porqué de esta cuenta, es necesario saber que
-             * Settings.System.SCREEN_BRIGHTNESS retorna el valor del brillo
-             * actual de la pantalla dentro de un rango que va de 0 a 255.
-             * FUENTE: https://developer.android.com/reference/android/provider/Settings.System.html#SCREEN_BRIGHTNESS
-             *
-             * Para poder devolver el porcentaje (que es lo que debe retornar
-             * el método), es necesario hacer la siguiente operación: */
-            porcentajeBrillo = porcentajeBrillo * 100 / 255;
-
-            ConstructorXML.adjuntarMetrica("ScreenBrightness%", String.valueOf(porcentajeBrillo));
-        }
+        ConstructorXML.adjuntarMetrica("ScreenBrightness%", String.valueOf(porcentajeBrillo));
 
         return porcentajeBrillo;
     }

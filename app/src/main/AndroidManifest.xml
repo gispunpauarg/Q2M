@@ -11,12 +11,12 @@
 
     <!-- PERMISOS REQUERIDOS POR LA LIBRERÍA ~ COMIENZO -->
 
-        <!-- Permisos requeridos para las métricas "intensidad de la señal" y "tipo de conexión" -->
+        <!-- Permisos requeridos para las métricas "getSignalStrength" y "getConnectionType" -->
         <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Aunque la métrica "tipo de conexión" sólo requiere de este permiso -->
+        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Aunque la métrica "getConnectionType" sólo requiere de este permiso -->
         <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
-        <!-- Permiso requerido para las métricas "getLatency", "getJitter" y "pérdida de paquetes" -->
+        <!-- Permiso requerido para las métricas "getLatency", "getJitter" y "getPacketLoss" -->
         <uses-permission android:name="android.permission.INTERNET" />
 
         <!-- Permisos requeridos para poder manejar el archivo XML en el que se guardan las métricas -->
