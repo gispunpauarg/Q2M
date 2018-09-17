@@ -582,21 +582,25 @@ public class Metricas implements android.hardware.SensorEventListener {
         int porcentajeBrillo = -1;
 
         try {
-            porcentajeBrillo = android.provider.Settings.System.getInt(this.contextoAplicacion.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+            if (android.provider.Settings.System.getInt(this.contextoAplicacion.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE) == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
+                Log.e("Error", "No se puede retornar un valor acertado para la métrica «getScreenBrightness» porque el brillo adaptivo está activado en el dispositivo. Retornando -1.");
+            } else {
+                porcentajeBrillo = android.provider.Settings.System.getInt(this.contextoAplicacion.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+
+                /* Settings.System.SCREEN_BRIGHTNESS retorna el valor del brillo
+                 * actual de la pantalla dentro de un rango que va de 0 a 255.
+                 * FUENTE: https://developer.android.com/reference/android/provider/Settings.System.html#SCREEN_BRIGHTNESS
+                 *
+                 * Para poder devolver el porcentaje (que es lo que debe retornar
+                 * el método), es necesario hacer la siguiente operación: */
+                porcentajeBrillo = porcentajeBrillo * 100 / 255;
+
+                if (porcentajeBrillo != -1) {
+                    ConstructorXML.adjuntarMetrica("ScreenBrightness%", String.valueOf(porcentajeBrillo));
+                }
+            }
         } catch(android.provider.Settings.SettingNotFoundException e) {
             Log.e("Error", "Se produjo una excepción de tipo SettingNotFoundException durante la ejecución de «getScreenBrightness».");
-        }
-
-        /* Settings.System.SCREEN_BRIGHTNESS retorna el valor del brillo
-        * actual de la pantalla dentro de un rango que va de 0 a 255.
-        * FUENTE: https://developer.android.com/reference/android/provider/Settings.System.html#SCREEN_BRIGHTNESS
-        *
-        * Para poder devolver el porcentaje (que es lo que debe retornar
-        * el método), es necesario hacer la siguiente operación: */
-        porcentajeBrillo = porcentajeBrillo * 100 / 255;
-
-        if (porcentajeBrillo != -1) {
-            ConstructorXML.adjuntarMetrica("ScreenBrightness%", String.valueOf(porcentajeBrillo));
         }
 
         return porcentajeBrillo;
