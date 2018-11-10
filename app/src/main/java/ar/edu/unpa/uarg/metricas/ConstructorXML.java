@@ -54,7 +54,7 @@ public class ConstructorXML {
 
             long fechaSistema = System.currentTimeMillis();
             String fechaFormateada = formateadorFecha.format(fechaSistema);
-            metrica = "<metrica nombre=\"" + metrica + "\" fecha=\"" + fechaFormateada + "\">" + valor + "</metrica>";
+            metrica = "<metrica identificador=\"" + metrica + "\" fecha=\"" + fechaFormateada + "\">" + valor + "</metrica>";
 
             bufferedWriter.append(metrica);
             bufferedWriter.newLine();
@@ -91,7 +91,7 @@ public class ConstructorXML {
 
             long fechaSistema = System.currentTimeMillis();
             String fechaFormateada = formateadorFecha.format(fechaSistema);
-            metrica = "<metrica nombre=\"" + metrica + "\" fecha=\"" + fechaFormateada + "\" comentario=\"" + comentario + "\">" + valor + "</metrica>";
+            metrica = "<metrica identificador=\"" + metrica + "\" fecha=\"" + fechaFormateada + "\" comentario=\"" + comentario + "\">" + valor + "</metrica>";
 
             bufferedWriter.append(metrica);
             bufferedWriter.newLine();
