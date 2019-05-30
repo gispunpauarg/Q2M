@@ -10,6 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.provider.Settings;
+import android.support.v4.app.FragmentActivity;
 import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
@@ -26,17 +27,19 @@ import java.io.IOException;
  * @author Ariel Machini
  * @see #createInstance(Context)
  */
-public class Metricas implements android.hardware.SensorEventListener {
+public class Metricas implements android.hardware.SensorEventListener, DialogoEstrellas.DialogoEstrellasListener {
 
     private static Metricas instancia = null;
     private Context contextoAplicacion;
     private float lux;
     private float proximidad;
+    private float puntajeUsuario;
     private long latenciaPercibidaUsuario;
 
     private Metricas(Context contexto) {
         this.contextoAplicacion = contexto;
         this.latenciaPercibidaUsuario = Integer.MIN_VALUE;
+        this.puntajeUsuario = Integer.MIN_VALUE;
         SensorManager sensorManager = (SensorManager) this.contextoAplicacion.getSystemService(Context.SENSOR_SERVICE);
         Sensor sensorLux = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         Sensor sensorProximidad = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
@@ -123,11 +126,11 @@ public class Metricas implements android.hardware.SensorEventListener {
         if (evento.sensor.getType() == Sensor.TYPE_LIGHT) {
             this.lux = evento.values[0];
 
-            Log.i("Cambio en el sensor", "Lux: " + this.lux + ".");
+            // Log.i("Cambio en el sensor", "Lux: " + this.lux + ".");
         } else if (evento.sensor.getType() == Sensor.TYPE_PROXIMITY) {
             this.proximidad = evento.values[0];
 
-            Log.i("Cambio en el sensor", "Proximidad: " + this.proximidad + ".");
+            // Log.i("Cambio en el sensor", "Proximidad: " + this.proximidad + ".");
         }
     }
 
@@ -715,6 +718,35 @@ public class Metricas implements android.hardware.SensorEventListener {
     }
 
     /**
+     * (Métrica QoE) Retorna el puntaje que el usuario eligió para la
+     * aplicación cuando se llamó al método <code>promptForUserScore()</code>.
+     *
+     * @return El puntaje (de 1 a 5) que el usuario eligió para la aplicación.
+     * Retorna -1 si no se llamó al método <code>promptForUserScore()</code>
+     * primero.
+     * @author Ariel Machini.
+     * @see #promptForUserScore(FragmentActivity)
+     */
+    public float getUserScore() {
+        if (this.puntajeUsuario != Integer.MIN_VALUE) {
+            float puntajeUsuarioActual = this.puntajeUsuario;
+
+            ConstructorXML.adjuntarMetrica("UserScore", String.valueOf(puntajeUsuarioActual));
+
+            /* Se restaura el valor de esta variable para que en posteriores
+             * ejecuciones de la misma métrica no se pueda llamar a este
+             * método sin antes llamar a promptForUserScore(). */
+            this.puntajeUsuario = Integer.MIN_VALUE;
+
+            return puntajeUsuarioActual;
+        } else {
+            Log.e("Puntaje del usuario", "Para poder usar el método getUserScore() primero debe utilizar el método promptForUserScore().");
+
+            return -1;
+        }
+    }
+
+    /**
      * (Métrica QoE) Reporta si el teléfono está cargando (ya sea por conexión
      * CA, USB o inalámbricamente) o no.
      *
@@ -799,6 +831,37 @@ public class Metricas implements android.hardware.SensorEventListener {
 
             return -1;
         }
+    }
+
+    /**
+     * (Métrica QoE) Muestra un diálogo para que el usuario elija un puntaje
+     * de 1 a 5 estrellas. Este método debería llamarse tras la ejecución de
+     * una o más operaciones que tengan un efecto o característica que el
+     * usuario pueda calificar.
+     *
+     * @param activity La actividad desde la cual se está llamando a este método. Es necesaria para poder
+     *                 mostrar el diálogo.
+     * @author Ariel Machini
+     * @see #getUserScore()
+     */
+    public void promptForUserScore(FragmentActivity activity) {
+        DialogoEstrellas dialogoEstrellas = new DialogoEstrellas();
+
+        dialogoEstrellas.show(activity.getSupportFragmentManager(), "dialogo_estrellas");
+    }
+
+    /**
+     * ¡No utilice este método! Si desea pedir al usuario que puntúe la aplicación (métrica QoE), llame al
+     * método <code>promptForUserScore(FragmentManager)</code>.
+     * Este método se ejecutará automáticamente cuando sea necesario, y su finalidad es asignar el puntaje que
+     * seleccionó el usuario en el diálogo a una variable en esta clase (<code>Metricas</code>).
+     *
+     * @author Ariel Machini
+     * @see #promptForUserScore(FragmentActivity)
+     */
+    @Override
+    public void saveScore(Float score) {
+        this.puntajeUsuario = score;
     }
 
 }
