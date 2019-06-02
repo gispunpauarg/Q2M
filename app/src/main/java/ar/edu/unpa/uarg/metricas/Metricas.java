@@ -1,8 +1,11 @@
 package ar.edu.unpa.uarg.metricas;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -17,6 +20,7 @@ import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.IOException;
 
@@ -27,7 +31,7 @@ import java.io.IOException;
  * @author Ariel Machini
  * @see #createInstance(Context)
  */
-public class Metricas implements android.hardware.SensorEventListener, DialogoEstrellas.DialogoEstrellasListener {
+public class Metricas implements android.hardware.SensorEventListener {
 
     private static Metricas instancia = null;
     private Context contextoAplicacion;
@@ -717,7 +721,7 @@ public class Metricas implements android.hardware.SensorEventListener, DialogoEs
         return porcentajeEnUso;
     }
 
-    /**
+    /*
      * (Métrica QoE) Retorna el puntaje que el usuario eligió para la
      * aplicación cuando se llamó al método <code>promptForUserScore()</code>.
      *
@@ -727,24 +731,24 @@ public class Metricas implements android.hardware.SensorEventListener, DialogoEs
      * @author Ariel Machini.
      * @see #promptForUserScore(FragmentActivity)
      */
-    public float getUserScore() {
-        if (this.puntajeUsuario != Integer.MIN_VALUE) {
-            float puntajeUsuarioActual = this.puntajeUsuario;
+    //public float getUserScore() {
+        //if (this.puntajeUsuario != Integer.MIN_VALUE) {
+            //float puntajeUsuarioActual = this.puntajeUsuario;
 
-            ConstructorXML.adjuntarMetrica("UserScore", String.valueOf(puntajeUsuarioActual));
+            //ConstructorXML.adjuntarMetrica("UserScore", String.valueOf(puntajeUsuarioActual));
 
             /* Se restaura el valor de esta variable para que en posteriores
              * ejecuciones de la misma métrica no se pueda llamar a este
              * método sin antes llamar a promptForUserScore(). */
-            this.puntajeUsuario = Integer.MIN_VALUE;
+            //this.puntajeUsuario = Integer.MIN_VALUE;
 
-            return puntajeUsuarioActual;
-        } else {
-            Log.e("Puntaje del usuario", "Para poder usar el método getUserScore() primero debe utilizar el método promptForUserScore().");
+            //return puntajeUsuarioActual;
+        //} else {
+            //Log.e("Puntaje del usuario", "Para poder usar el método getUserScore() primero debe utilizar el método promptForUserScore().");
 
-            return -1;
-        }
-    }
+            //return -1;
+        //}
+    //}
 
     /**
      * (Métrica QoE) Reporta si el teléfono está cargando (ya sea por conexión
@@ -833,7 +837,7 @@ public class Metricas implements android.hardware.SensorEventListener, DialogoEs
         }
     }
 
-    /**
+    /*
      * (Métrica QoE) Muestra un diálogo para que el usuario elija un puntaje
      * de 1 a 5 estrellas. Este método debería llamarse tras la ejecución de
      * una o más operaciones que tengan un efecto o característica que el
@@ -844,13 +848,13 @@ public class Metricas implements android.hardware.SensorEventListener, DialogoEs
      * @author Ariel Machini
      * @see #getUserScore()
      */
-    public void promptForUserScore(FragmentActivity activity) {
-        DialogoEstrellas dialogoEstrellas = new DialogoEstrellas();
+    //public void promptForUserScore(FragmentActivity activity) {
+        //DialogoEstrellas dialogoEstrellas = new DialogoEstrellas();
 
-        dialogoEstrellas.show(activity.getSupportFragmentManager(), "dialogo_estrellas");
-    }
+        //dialogoEstrellas.show(activity.getSupportFragmentManager(), "dialogo_estrellas");
+    //}
 
-    /**
+    /*
      * ¡No utilice este método! Si desea pedir al usuario que puntúe la aplicación (métrica QoE), llame al
      * método <code>promptForUserScore(FragmentManager)</code>.
      * Este método se ejecutará automáticamente cuando sea necesario, y su finalidad es asignar el puntaje que
@@ -859,9 +863,40 @@ public class Metricas implements android.hardware.SensorEventListener, DialogoEs
      * @author Ariel Machini
      * @see #promptForUserScore(FragmentActivity)
      */
-    @Override
-    public void saveScore(Float score) {
-        this.puntajeUsuario = score;
+    //@Override
+    //public void saveScore(Float score) {
+        //this.puntajeUsuario = score;
+    //}
+
+    public void getScore(Activity a) {
+        final Activity activityRecibida = a;
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activityRecibida.getApplicationContext());
+        final CharSequence[] items = new CharSequence[3];
+
+        items[0] = "malo";
+        items[1] = "regular";
+        items[2] = "bueno";
+
+        builder.setTitle("Score")
+                .setSingleChoiceItems(items, 0, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(
+                                activityRecibida.getApplicationContext(),
+                                "Seleccionaste: " + items[which],
+                                Toast.LENGTH_SHORT)
+                                .show();
+                        valor(items[which]);
+                    }
+                });
+        builder.create();
+        builder.show();
+    }
+
+    private void valor(CharSequence i) {
+        // aca recuperarias el valor seleccionado para guardarlo en el xml
+        Log.d("PRUEBA ",String.valueOf(i));
     }
 
 }
