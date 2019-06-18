@@ -816,9 +816,8 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @param actividadActual La actividad desde la cual se está invocando al método. Es necesaria para poder
      *                        crear el diálogo.
      */
-    public void getUserScore(Activity actividadActual) {
-        final Activity a = actividadActual;
-        final AlertDialog.Builder builder = new AlertDialog.Builder(a);
+    public void getUserScore(final Activity actividadActual) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(actividadActual);
         final CharSequence[] opciones = new CharSequence[3];
 
         opciones[0] = "Mala";
@@ -830,7 +829,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Toast.makeText(
-                                a.getApplicationContext(),
+                                actividadActual.getApplicationContext(),
                                 "Seleccionó: " + opciones[which] + ".",
                                 Toast.LENGTH_SHORT)
                                 .show();
