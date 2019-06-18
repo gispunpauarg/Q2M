@@ -13,7 +13,6 @@ import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.provider.Settings;
-import android.support.v4.app.FragmentActivity;
 import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
@@ -68,7 +67,7 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @param contexto El contexto de la aplicación Android que va a hacer uso
      *                 de los servicios de la clase. Es necesario para poder
      *                 acceder a diferentes funcionalidades del teléfono
-     *                 requeridas para calcular el valor de la mayor parte de
+     *                 requeridas para calcular el saveScore de la mayor parte de
      *                 las métricas.
      * @return La instancia de la clase <code>Metricas</code> que se creó.
      * @author Ariel Machini
@@ -187,7 +186,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                     if (cadenaSalida[i].contains("%CPU")) {
                         /* ¡NO CAMBIAR LOS ÍNDICES YA ESTABLECIDOS! Estos
                          * fueron puestos así para capturar el porcentaje sin
-                         * importar cuál sea su valor (es decir, comprende
+                         * importar cuál sea su saveScore (es decir, comprende
                          * desde el 0.0 hasta el 100.0. */
                         usoCPU = Double.valueOf(cadenaSalida[i + 1].substring(42, 47).trim());
 
@@ -292,7 +291,7 @@ public class Metricas implements android.hardware.SensorEventListener {
 
     /**
      * (Métrica QoE) Mide la luz del entorno en el que se encuentra el usuario
-     * y retorna el valor en lx (lux). Para aprender más sobre la unidad de
+     * y retorna el saveScore en lx (lux). Para aprender más sobre la unidad de
      * medida lux visite https://es.wikipedia.org/wiki/Lux.
      *
      * @return El nivel de luz del entorno en lx.
@@ -575,10 +574,10 @@ public class Metricas implements android.hardware.SensorEventListener {
     /**
      * (Métrica QoE) Retorna el porcentaje de brillo de la pantalla del
      * teléfono del usuario.
-     * NOTA: Esta métrica sólo retornará un valor correcto si el usuario no
+     * NOTA: Esta métrica sólo retornará un saveScore correcto si el usuario no
      * tiene la funcionalidad conocida como "brillo adaptivo" habilitada en su
      * teléfono. En caso contrario (debido a una limitación del sistema
-     * operativo) es imposible obtener un valor acertado.
+     * operativo) es imposible obtener un saveScore acertado.
      *
      * @return El porcentaje de brillo (de 0% a 100%) de la pantalla del
      * teléfono a través de la cual se visualiza la aplicación. Retorna -1 si
@@ -590,11 +589,11 @@ public class Metricas implements android.hardware.SensorEventListener {
 
         try {
             if (android.provider.Settings.System.getInt(this.contextoAplicacion.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE) == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
-                Log.e("Error", "No se puede retornar un valor acertado para la métrica «getScreenBrightness» porque el brillo adaptivo está activado en el dispositivo. Retornando -1.");
+                Log.e("Error", "No se puede retornar un saveScore acertado para la métrica «getScreenBrightness» porque el brillo adaptivo está activado en el dispositivo. Retornando -1.");
             } else {
                 porcentajeBrillo = android.provider.Settings.System.getInt(this.contextoAplicacion.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
 
-                /* Settings.System.SCREEN_BRIGHTNESS retorna el valor del brillo
+                /* Settings.System.SCREEN_BRIGHTNESS retorna el saveScore del brillo
                  * actual de la pantalla dentro de un rango que va de 0 a 255.
                  * FUENTE: https://developer.android.com/reference/android/provider/Settings.System.html#SCREEN_BRIGHTNESS
                  *
@@ -615,13 +614,13 @@ public class Metricas implements android.hardware.SensorEventListener {
 
     /**
      * (Métrica QoE) Retorna la intensidad de la señal en dBm.
-     * NOTA: Si el valor que recibe de este método es 1, entonces el tipo de
+     * NOTA: Si el saveScore que recibe de este método es 1, entonces el tipo de
      * conexión que está utilizando el usuario NO es inalámbrica.
      *
      * @return La potencia en dBm de la señal a la que el usuario está
-     * conectado. Retorna 1 si no se puede obtener el valor por alguna causa
-     * (esto es así porque el valor en dBm de la intensidad de la señal nunca
-     * va a ser mayor que 0, por lo tanto 1 es un valor imposible).
+     * conectado. Retorna 1 si no se puede obtener el saveScore por alguna causa
+     * (esto es así porque el saveScore en dBm de la intensidad de la señal nunca
+     * va a ser mayor que 0, por lo tanto 1 es un saveScore imposible).
      * @author Ariel Machini
      */
     public int getSignalStrength() {
@@ -721,35 +720,6 @@ public class Metricas implements android.hardware.SensorEventListener {
         return porcentajeEnUso;
     }
 
-    /*
-     * (Métrica QoE) Retorna el puntaje que el usuario eligió para la
-     * aplicación cuando se llamó al método <code>promptForUserScore()</code>.
-     *
-     * @return El puntaje (de 1 a 5) que el usuario eligió para la aplicación.
-     * Retorna -1 si no se llamó al método <code>promptForUserScore()</code>
-     * primero.
-     * @author Ariel Machini.
-     * @see #promptForUserScore(FragmentActivity)
-     */
-    //public float getUserScore() {
-        //if (this.puntajeUsuario != Integer.MIN_VALUE) {
-            //float puntajeUsuarioActual = this.puntajeUsuario;
-
-            //ConstructorXML.adjuntarMetrica("UserScore", String.valueOf(puntajeUsuarioActual));
-
-            /* Se restaura el valor de esta variable para que en posteriores
-             * ejecuciones de la misma métrica no se pueda llamar a este
-             * método sin antes llamar a promptForUserScore(). */
-            //this.puntajeUsuario = Integer.MIN_VALUE;
-
-            //return puntajeUsuarioActual;
-        //} else {
-            //Log.e("Puntaje del usuario", "Para poder usar el método getUserScore() primero debe utilizar el método promptForUserScore().");
-
-            //return -1;
-        //}
-    //}
-
     /**
      * (Métrica QoE) Reporta si el teléfono está cargando (ya sea por conexión
      * CA, USB o inalámbricamente) o no.
@@ -824,7 +794,7 @@ public class Metricas implements android.hardware.SensorEventListener {
 
             ConstructorXML.adjuntarMetrica("UserPerceivedLatency", String.valueOf(latenciaPercibidaFinal));
 
-            /* Se restaura el valor de esta variable para que en posteriores
+            /* Se restaura el saveScore de esta variable para que en posteriores
              * ejecuciones de la misma métrica no se pueda llamar a este
              * método sin antes llamar a perceivedLatencyBegin(). */
             this.latenciaPercibidaUsuario = Integer.MIN_VALUE;
@@ -837,66 +807,53 @@ public class Metricas implements android.hardware.SensorEventListener {
         }
     }
 
-    /*
-     * (Métrica QoE) Muestra un diálogo para que el usuario elija un puntaje
-     * de 1 a 5 estrellas. Este método debería llamarse tras la ejecución de
-     * una o más operaciones que tengan un efecto o característica que el
-     * usuario pueda calificar.
+    /**
+     * (Métrica QoE) Muestra un diálogo para que el usuario elija una opción que describa la calidad de su
+     * experiencia hasta el momento. Este método debería llamarse tras la ejecución de una o más operaciones
+     * que tengan un efecto o característica que el usuario pueda calificar.
      *
-     * @param activity La actividad desde la cual se está llamando a este método. Es necesaria para poder
-     *                 mostrar el diálogo.
-     * @author Ariel Machini
-     * @see #getUserScore()
+     * @author Juan Enriquez, Ariel Machini
+     * @param actividadActual La actividad desde la cual se está invocando al método. Es necesaria para poder
+     *                        crear el diálogo.
      */
-    //public void promptForUserScore(FragmentActivity activity) {
-        //DialogoEstrellas dialogoEstrellas = new DialogoEstrellas();
+    public void getUserScore(Activity actividadActual) {
+        final Activity a = actividadActual;
+        final AlertDialog.Builder builder = new AlertDialog.Builder(a);
+        final CharSequence[] opciones = new CharSequence[3];
 
-        //dialogoEstrellas.show(activity.getSupportFragmentManager(), "dialogo_estrellas");
-    //}
+        opciones[0] = "Mala";
+        opciones[1] = "Regular";
+        opciones[2] = "Buena";
 
-    /*
-     * ¡No utilice este método! Si desea pedir al usuario que puntúe la aplicación (métrica QoE), llame al
-     * método <code>promptForUserScore(FragmentManager)</code>.
-     * Este método se ejecutará automáticamente cuando sea necesario, y su finalidad es asignar el puntaje que
-     * seleccionó el usuario en el diálogo a una variable en esta clase (<code>Metricas</code>).
-     *
-     * @author Ariel Machini
-     * @see #promptForUserScore(FragmentActivity)
-     */
-    //@Override
-    //public void saveScore(Float score) {
-        //this.puntajeUsuario = score;
-    //}
-
-    public void getScore(Activity a) {
-        final Activity activityRecibida = a;
-
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activityRecibida.getApplicationContext());
-        final CharSequence[] items = new CharSequence[3];
-
-        items[0] = "malo";
-        items[1] = "regular";
-        items[2] = "bueno";
-
-        builder.setTitle("Score")
-                .setSingleChoiceItems(items, 0, new DialogInterface.OnClickListener() {
+        builder.setTitle("Califique su experiencia")
+                .setSingleChoiceItems(opciones, 0, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Toast.makeText(
-                                activityRecibida.getApplicationContext(),
-                                "Seleccionaste: " + items[which],
+                                a.getApplicationContext(),
+                                "Seleccionó: " + opciones[which] + ".",
                                 Toast.LENGTH_SHORT)
                                 .show();
-                        valor(items[which]);
+
+                        saveScore(opciones[which]);
                     }
                 });
+
         builder.create();
         builder.show();
     }
 
-    private void valor(CharSequence i) {
-        // aca recuperarias el valor seleccionado para guardarlo en el xml
-        Log.d("PRUEBA ",String.valueOf(i));
+    /**
+     * Este método no calcula ninguna métrica, y sólo debe ser utilizado dentro del método
+     * <code>getUserScore()</code>.
+     *
+     * @author Juan Enriquez, Ariel Machini
+     * @see #getUserScore(Activity)
+     */
+    private void saveScore(CharSequence i) {
+        Log.d("Puntaje del usuario", String.valueOf(i));
+
+        ConstructorXML.adjuntarMetrica("UserScore", String.valueOf(i));
     }
 
 }
