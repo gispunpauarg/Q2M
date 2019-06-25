@@ -206,7 +206,7 @@ public class Metricas implements android.hardware.SensorEventListener {
             proceso.destroy();
         }
 
-        ConstructorXML.adjuntarMetrica("CPUConsumption%", String.valueOf(usoCPU));
+        ConstructorXML.adjuntarMetrica("CPUConsumption", String.valueOf(usoCPU));
 
         return usoCPU;
     }
@@ -225,7 +225,7 @@ public class Metricas implements android.hardware.SensorEventListener {
 
         int cargaActual = (estadoBateria.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) * 100) / estadoBateria.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-        ConstructorXML.adjuntarMetrica("BatteryCharge%", String.valueOf(cargaActual));
+        ConstructorXML.adjuntarMetrica("BatteryCharge", String.valueOf(cargaActual));
 
         return cargaActual;
     }
@@ -487,7 +487,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                 proceso.destroy();
             }
 
-            ConstructorXML.adjuntarMetrica("PacketLoss%", String.valueOf(paquetesPerdidos));
+            ConstructorXML.adjuntarMetrica("PacketLoss", String.valueOf(paquetesPerdidos));
 
             return paquetesPerdidos;
         } else {
@@ -548,7 +548,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                 proceso.destroy();
             }
 
-            ConstructorXML.adjuntarMetrica("PacketLoss%", String.valueOf(paquetesPerdidos));
+            ConstructorXML.adjuntarMetrica("PacketLoss", String.valueOf(paquetesPerdidos));
 
             return paquetesPerdidos;
         } else {
@@ -602,7 +602,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                 porcentajeBrillo = porcentajeBrillo * 100 / 255;
 
                 if (porcentajeBrillo != -1) {
-                    ConstructorXML.adjuntarMetrica("ScreenBrightness%", String.valueOf(porcentajeBrillo));
+                    ConstructorXML.adjuntarMetrica("ScreenBrightness", String.valueOf(porcentajeBrillo));
                 }
             }
         } catch(android.provider.Settings.SettingNotFoundException e) {
@@ -715,7 +715,7 @@ public class Metricas implements android.hardware.SensorEventListener {
         double memoriaEnUso = (memoryInfo.totalMem / 0x100000L) - (memoryInfo.availMem / 0x100000L);
         double porcentajeEnUso = memoriaEnUso * 100 / (memoryInfo.totalMem / 0x100000L);
 
-        ConstructorXML.adjuntarMetrica("MemoryConsumption%", String.valueOf(porcentajeEnUso));
+        ConstructorXML.adjuntarMetrica("MemoryConsumption", String.valueOf(porcentajeEnUso));
 
         return porcentajeEnUso;
     }
@@ -830,7 +830,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                     public void onClick(DialogInterface dialog, int which) {
                         Toast.makeText(
                                 actividadActual.getApplicationContext(),
-                                "Seleccionó: " + opciones[which] + ".",
+                                "¡Gracias por su calificación!",
                                 Toast.LENGTH_SHORT)
                                 .show();
 
@@ -850,7 +850,7 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @see #getUserScore(Activity)
      */
     private void saveScore(CharSequence i) {
-        Log.d("Puntaje del usuario", String.valueOf(i));
+        Log.d("Calificación asignada", String.valueOf(i));
 
         ConstructorXML.adjuntarMetrica("UserScore", String.valueOf(i));
     }
