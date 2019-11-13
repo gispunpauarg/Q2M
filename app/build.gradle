@@ -7,7 +7,6 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -20,9 +19,6 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:28.0.0'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
 
 task eliminarJARAntiguo(type: Delete) {
@@ -30,7 +26,7 @@ task eliminarJARAntiguo(type: Delete) {
 }
 
 task exportarJAR(type: Copy) {
-    from('build/intermediates/intermediate-jars/release/')
+    from('build/intermediates/packaged-classes/release')
     into('release/')
     include('classes.jar')
     rename('classes.jar', 'Q2M.jar')
