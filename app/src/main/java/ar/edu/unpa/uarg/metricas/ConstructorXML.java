@@ -34,6 +34,8 @@ public class ConstructorXML {
      * Adjunta la métrica especificada por parámetros al archivo XML que
      * almacena las métricas.
      *
+     * @deprecated Este método fue reemplazado por
+     * adjuntarMetrica(String calificacionUsuario, String metrica, String valor).
      * @param metrica El nombre de la métrica que se va a adjuntar. Por
      *                ejemplo, "latenciaMilisegundos".
      * @param valor   El valor correspondiente a la métrica especificada mediante
@@ -54,7 +56,7 @@ public class ConstructorXML {
 
             long fechaSistema = System.currentTimeMillis();
             String fechaFormateada = formateadorFecha.format(fechaSistema);
-            metrica = "<metrica identificador=\"" + metrica + "\" fecha=\"" + fechaFormateada + "\">" + valor + "</metrica>";
+            metrica = "<metrica indicador=\"" + metrica + "\" fecha=\"" + fechaFormateada + "\">" + valor + "</metrica>";
 
             bufferedWriter.append(metrica);
             bufferedWriter.newLine();
@@ -68,30 +70,29 @@ public class ConstructorXML {
      * Adjunta la métrica especificada por parámetros al archivo XML que
      * almacena las métricas.
      *
-     * @param metrica    El nombre de la métrica que se va a adjuntar. Por
-     *                   ejemplo, "latenciaMilisegundos".
-     * @param valor      El valor correspondiente a la métrica especificada mediante
-     *                   la variable «metrica». Siguiendo con el ejemplo que se usó
-     *                   para el parámetro anterior, un ejemplo cualquiera de un
-     *                   valor apropiado sería «72» (milisegundos).
-     * @param comentario Un comentario definido por el desarrollador para la
-     *                   métrica que se va a adjuntar.
-     * @author Ariel Machini
-     * @see #adjuntarMetrica(String, String)
+     * @param calificacionUsuario La calificación que eligió el usuario para la
+     *                            experiencia que le brindó la aplicación en la
+     *                            que se realizaron las mediciones.
+     * @param metrica El nombre de la métrica que se va a adjuntar. Por
+     *                ejemplo, "latenciaMilisegundos".
+     * @param valor El valor correspondiente a la métrica especificada mediante
+     *              la variable «metrica». Siguiendo con el ejemplo que se usó
+     *              para el parámetro anterior, un ejemplo cualquiera de un
+     *              valor apropiado sería «72» (milisegundos).
      */
-    public static void adjuntarMetrica(String metrica, String valor, String comentario) {
+    public static void adjuntarMetrica(String calificacionUsuario, String metrica, String valor) {
         File archivoXML = new File(Environment.getExternalStorageDirectory() + "/" + NOMBRE_ARCHIVO + ".xml");
 
         try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(archivoXML, true));
+
             if (!archivoXML.exists()) {
                 archivoXML.createNewFile();
             }
 
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(archivoXML, true));
-
             long fechaSistema = System.currentTimeMillis();
             String fechaFormateada = formateadorFecha.format(fechaSistema);
-            metrica = "<metrica identificador=\"" + metrica + "\" fecha=\"" + fechaFormateada + "\" comentario=\"" + comentario + "\">" + valor + "</metrica>";
+            metrica = "<indicator name=\"" + metrica + "\" date=\"" + fechaFormateada + "\" score=\"" + calificacionUsuario + "\">" + valor + "</indicator>";
 
             bufferedWriter.append(metrica);
             bufferedWriter.newLine();

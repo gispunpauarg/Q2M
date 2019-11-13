@@ -12,6 +12,7 @@ import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
+import android.os.StrictMode;
 import android.provider.Settings;
 import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
@@ -20,7 +21,6 @@ import android.telephony.CellInfoWcdma;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
-
 import java.io.IOException;
 
 /**
@@ -34,15 +34,100 @@ public class Metricas implements android.hardware.SensorEventListener {
 
     private static Metricas instancia = null;
     private Context contextoAplicacion;
+
+    /* Métricas calculadas por la librería: */
+    private double consumoMemoria;
+    private double consumoMemoriaMB;
+    private double jitter;
+    private double latencia;
+    private double paquetesPerdidos;
+    private double usoCPU;
+    private int fuerzaSenial;
+    private int porcentajeBrillo;
+    private int porcentajeCargaBateria;
     private float lux;
     private float proximidad;
-    private float puntajeUsuario;
     private long latenciaPercibidaUsuario;
+    private String calificacionUsuario;
+    private String estaCargando;
+    private String estaConectado;
+    private String tipoConexion;
+
+
+    private class WebServiceClient extends android.os.AsyncTask<String, Integer, Boolean> {
+
+        private Context contextoAplicacion;
+
+        public WebServiceClient(Context contexto) {
+            this.contextoAplicacion = contexto;
+        }
+
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            org.json.JSONArray jsonArray = null;
+            java.net.URL url = null;
+
+            try {
+                StrictMode.ThreadPolicy threadPolicy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+                StrictMode.setThreadPolicy(threadPolicy);
+                Log.d("APIREST", "Comenzando proceso...");
+
+                url = new java.net.URL("http://localhost/Q2M/upload");
+                java.net.HttpURLConnection httpURLConnection = (java.net.HttpURLConnection) url.openConnection();
+                String inputJson = "{\"metricas\": \"" + strings[0] + "\"}"; // ToDo Ver cómo concatenar bien.
+
+                httpURLConnection.setDoOutput(true);
+                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                httpURLConnection.setUseCaches(false);
+
+                try (java.io.OutputStream outputStream = httpURLConnection.getOutputStream()) {
+                    byte[] input = inputJson.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+                    outputStream.write(input, 0, input.length);
+                }
+
+                java.io.BufferedReader bufferedReader = new java.io.BufferedReader(new java.io.InputStreamReader(httpURLConnection.getInputStream()));
+                String linea;
+                StringBuffer respuesta = new StringBuffer();
+
+                while ((linea = bufferedReader.readLine()) != null) {
+                    respuesta.append(linea);
+                }
+
+                Log.d("APIREST", "Proceso terminado. RESPUESTA: " + respuesta.toString() + ".");
+            } catch (java.net.MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return true;
+        }
+
+    } // ToDo: Cambiar nombre de la clase.
 
     private Metricas(Context contexto) {
         this.contextoAplicacion = contexto;
-        this.latenciaPercibidaUsuario = Integer.MIN_VALUE;
-        this.puntajeUsuario = Integer.MIN_VALUE;
+
+        /* Se inicializan las métricas con valores por defecto. Las variables "lux" y "proximidad" no se
+            inicializan con valores por defecto ya que se actualizan constantemente. */
+        this.calificacionUsuario = null;
+        this.consumoMemoria = -1;
+        this.consumoMemoriaMB = -1;
+        this.estaCargando = null;
+        this.estaConectado = null;
+        this.fuerzaSenial = 1;
+        this.jitter = -1;
+        this.latencia = -1;
+        this.latenciaPercibidaUsuario = -1;
+        this.paquetesPerdidos = -1;
+        this.porcentajeBrillo = -1;
+        this.porcentajeCargaBateria = -1;
+        this.tipoConexion = null;
+        this.usoCPU = -1;
+
         SensorManager sensorManager = (SensorManager) this.contextoAplicacion.getSystemService(Context.SENSOR_SERVICE);
         Sensor sensorLux = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         Sensor sensorProximidad = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
@@ -67,7 +152,7 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @param contexto El contexto de la aplicación Android que va a hacer uso
      *                 de los servicios de la clase. Es necesario para poder
      *                 acceder a diferentes funcionalidades del teléfono
-     *                 requeridas para calcular el saveScore de la mayor parte de
+     *                 requeridas para calcular el valor de la mayor parte de
      *                 las métricas.
      * @return La instancia de la clase <code>Metricas</code> que se creó.
      * @author Ariel Machini
@@ -186,7 +271,7 @@ public class Metricas implements android.hardware.SensorEventListener {
                     if (cadenaSalida[i].contains("%CPU")) {
                         /* ¡NO CAMBIAR LOS ÍNDICES YA ESTABLECIDOS! Estos
                          * fueron puestos así para capturar el porcentaje sin
-                         * importar cuál sea su saveScore (es decir, comprende
+                         * importar cuál sea su valor (es decir, comprende
                          * desde el 0.0 hasta el 100.0. */
                         usoCPU = Double.valueOf(cadenaSalida[i + 1].substring(42, 47).trim());
 
@@ -206,7 +291,8 @@ public class Metricas implements android.hardware.SensorEventListener {
             proceso.destroy();
         }
 
-        ConstructorXML.adjuntarMetrica("CPUConsumption", String.valueOf(usoCPU));
+        // ConstructorXML.adjuntarMetrica("CPUConsumption", String.valueOf(usoCPU));
+        this.usoCPU = usoCPU;
 
         return usoCPU;
     }
@@ -223,11 +309,12 @@ public class Metricas implements android.hardware.SensorEventListener {
         android.content.IntentFilter intentFilter = new android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent estadoBateria = this.contextoAplicacion.registerReceiver(null, intentFilter);
 
-        int cargaActual = (estadoBateria.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) * 100) / estadoBateria.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int porcentajeCargaBateria = (estadoBateria.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) * 100) / estadoBateria.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-        ConstructorXML.adjuntarMetrica("BatteryCharge", String.valueOf(cargaActual));
+        // ConstructorXML.adjuntarMetrica("BatteryCharge", String.valueOf(porcentajeCargaBateria));
+        this.porcentajeCargaBateria = porcentajeCargaBateria;
 
-        return cargaActual;
+        return porcentajeCargaBateria;
     }
 
     /**
@@ -241,39 +328,51 @@ public class Metricas implements android.hardware.SensorEventListener {
         ConnectivityManager connectivityManager = (ConnectivityManager) this.contextoAplicacion.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         if (connectivityManager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_WIFI) {
-            ConstructorXML.adjuntarMetrica("ConnectionType", "Wi-Fi");
+            // ConstructorXML.adjuntarMetrica("ConnectionType", "Wi-Fi");
+            this.tipoConexion = "Wi-Fi";
 
-            return "Wi-Fi";
+            // return "Wi-Fi";
         } else if (connectivityManager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_MOBILE) {
 
             switch (connectivityManager.getActiveNetworkInfo().getSubtype()) {
 
                 case TelephonyManager.NETWORK_TYPE_EDGE:
-                    ConstructorXML.adjuntarMetrica("ConnectionType", "EDGE");
-                    return "EDGE";
+                    // ConstructorXML.adjuntarMetrica("ConnectionType", "EDGE");
+                    this.tipoConexion = "EDGE";
+
+                    // return "EDGE";
 
                 case TelephonyManager.NETWORK_TYPE_GPRS:
-                    ConstructorXML.adjuntarMetrica("ConnectionType", "GPRS");
-                    return "GPRS";
+                    // ConstructorXML.adjuntarMetrica("ConnectionType", "GPRS");
+                    this.tipoConexion = "GPRS";
+
+                    // return "GPRS";
 
                 case TelephonyManager.NETWORK_TYPE_IDEN:
-                    ConstructorXML.adjuntarMetrica("ConnectionType", "2G");
-                    return "2G";
+                    // ConstructorXML.adjuntarMetrica("ConnectionType", "2G");
+                    this.tipoConexion = "2G";
+
+                    // return "2G";
 
                 case TelephonyManager.NETWORK_TYPE_UMTS:
-                    ConstructorXML.adjuntarMetrica("ConnectionType", "3G");
-                    return "3G";
+                    // ConstructorXML.adjuntarMetrica("ConnectionType", "3G");
+                    this.tipoConexion = "3G";
+
+                    // return "3G";
 
                 case TelephonyManager.NETWORK_TYPE_LTE:
-                    ConstructorXML.adjuntarMetrica("ConnectionType", "4G");
-                    return "4G";
+                    // ConstructorXML.adjuntarMetrica("ConnectionType", "4G");
+                    this.tipoConexion = "4G";
+
+                    // return "4G";
 
                 default: // Si el tipo de conexión no está contemplado arriba, se retorna igual.
-                    String tipoConexion = connectivityManager.getActiveNetworkInfo().getSubtypeName();
+                    // String tipoConexion = connectivityManager.getActiveNetworkInfo().getSubtypeName();
 
-                    ConstructorXML.adjuntarMetrica("ConnectionType", tipoConexion);
+                    // ConstructorXML.adjuntarMetrica("ConnectionType", tipoConexion);
+                    this.tipoConexion = connectivityManager.getActiveNetworkInfo().getSubtypeName();;
 
-                    return tipoConexion;
+                    // return tipoConexion;
             }
 
         } else {
@@ -281,24 +380,27 @@ public class Metricas implements android.hardware.SensorEventListener {
              * ninguno de los tipos arriba especificados, entonces estamos
              * ante un caso muy particular. De igual manera, se contempla la
              * posibilidad por más mínima que sea agregando este último «else». */
-            String tipoConexion = connectivityManager.getActiveNetworkInfo().getTypeName();
+            // String tipoConexion = connectivityManager.getActiveNetworkInfo().getTypeName();
 
-            ConstructorXML.adjuntarMetrica("ConnectionType", tipoConexion);
+            // ConstructorXML.adjuntarMetrica("ConnectionType", tipoConexion);
+            this.tipoConexion = connectivityManager.getActiveNetworkInfo().getTypeName();
 
-            return tipoConexion;
+            //return tipoConexion;
         }
+
+        return this.tipoConexion;
     }
 
     /**
      * (Métrica QoE) Mide la luz del entorno en el que se encuentra el usuario
-     * y retorna el saveScore en lx (lux). Para aprender más sobre la unidad de
+     * y retorna el valor en lx (lux). Para aprender más sobre la unidad de
      * medida lux visite https://es.wikipedia.org/wiki/Lux.
      *
      * @return El nivel de luz del entorno en lx.
      * @author Ariel Machini
      */
     public float getEnvironmentLight() {
-        ConstructorXML.adjuntarMetrica("EnvironmentLight", String.valueOf(this.lux));
+        // ConstructorXML.adjuntarMetrica("EnvironmentLight", String.valueOf(this.lux));
 
         return this.lux;
     }
@@ -359,7 +461,8 @@ public class Metricas implements android.hardware.SensorEventListener {
                  * suma. */
                 double jitter = (Math.abs(latencias.get(1) - latencias.get(0)) + Math.abs(latencias.get(2) - latencias.get(1)) + Math.abs(latencias.get(3) - latencias.get(2))) / 3;
 
-                ConstructorXML.adjuntarMetrica("Jitter", String.valueOf(jitter));
+                // ConstructorXML.adjuntarMetrica("Jitter", String.valueOf(jitter));
+                this.jitter = jitter;
 
                 return jitter;
             } catch (IndexOutOfBoundsException e) {
@@ -410,7 +513,8 @@ public class Metricas implements android.hardware.SensorEventListener {
                         break;
                     }
                 } else if (codigoSalida == 1) {
-                    ConstructorXML.adjuntarMetrica("Latency", "Sin respuesta");
+                    // ConstructorXML.adjuntarMetrica("Latency", "Sin respuesta");
+                    milisegundos = -1;
 
                     return -1;
                 } else {
@@ -426,7 +530,8 @@ public class Metricas implements android.hardware.SensorEventListener {
                 proceso.destroy();
             }
 
-            ConstructorXML.adjuntarMetrica("Latency", String.valueOf(milisegundos));
+            // ConstructorXML.adjuntarMetrica("Latency", String.valueOf(milisegundos));
+            this.latencia = milisegundos;
 
             return milisegundos;
         } else {
@@ -482,12 +587,13 @@ public class Metricas implements android.hardware.SensorEventListener {
             } catch (IOException e) {
                 Log.e("Error", "Se produjo un error de E/S durante la ejecución del método «getPacketLoss».");
             } catch (InterruptedException e) {
-                Log.e("Error", "No se pudo terminar con la ejecución del método «getPacketLoss» porque esta fue interrumpida.");
+                Log.e("Error", "No se pudo respuestaterminar con la ejecución del método «getPacketLoss» porque esta fue interrumpida.");
             } finally {
                 proceso.destroy();
             }
 
-            ConstructorXML.adjuntarMetrica("PacketLoss", String.valueOf(paquetesPerdidos));
+            // ConstructorXML.adjuntarMetrica("PacketLoss", String.valueOf(paquetesPerdidos));
+            this.paquetesPerdidos = paquetesPerdidos;
 
             return paquetesPerdidos;
         } else {
@@ -548,7 +654,8 @@ public class Metricas implements android.hardware.SensorEventListener {
                 proceso.destroy();
             }
 
-            ConstructorXML.adjuntarMetrica("PacketLoss", String.valueOf(paquetesPerdidos));
+            // ConstructorXML.adjuntarMetrica("PacketLoss", String.valueOf(paquetesPerdidos));
+            this.paquetesPerdidos = paquetesPerdidos;
 
             return paquetesPerdidos;
         } else {
@@ -563,10 +670,10 @@ public class Metricas implements android.hardware.SensorEventListener {
      * usuario.
      *
      * @return La proximidad en centímetros.
-     * @author Ariel Machini
+     * @author Ariel Machinirespuesta
      */
     public float getProximity() {
-        ConstructorXML.adjuntarMetrica("Proximity", String.valueOf(this.proximidad));
+        // ConstructorXML.adjuntarMetrica("Proximity", String.valueOf(this.proximidad));
 
         return this.proximidad;
     }
@@ -574,10 +681,10 @@ public class Metricas implements android.hardware.SensorEventListener {
     /**
      * (Métrica QoE) Retorna el porcentaje de brillo de la pantalla del
      * teléfono del usuario.
-     * NOTA: Esta métrica sólo retornará un saveScore correcto si el usuario no
+     * NOTA: Esta métrica sólo retornará un valor correcto si el usuario no
      * tiene la funcionalidad conocida como "brillo adaptivo" habilitada en su
      * teléfono. En caso contrario (debido a una limitación del sistema
-     * operativo) es imposible obtener un saveScore acertado.
+     * operativo) es imposible obtener un valor acertado.
      *
      * @return El porcentaje de brillo (de 0% a 100%) de la pantalla del
      * teléfono a través de la cual se visualiza la aplicación. Retorna -1 si
@@ -589,11 +696,11 @@ public class Metricas implements android.hardware.SensorEventListener {
 
         try {
             if (android.provider.Settings.System.getInt(this.contextoAplicacion.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE) == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
-                Log.e("Error", "No se puede retornar un saveScore acertado para la métrica «getScreenBrightness» porque el brillo adaptivo está activado en el dispositivo. Retornando -1.");
+                Log.e("Error", "No se puede retornar un valor acertado para la métrica «getScreenBrightness» porque el brillo adaptivo está activado en el dispositivo. Retornando -1.");
             } else {
                 porcentajeBrillo = android.provider.Settings.System.getInt(this.contextoAplicacion.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
 
-                /* Settings.System.SCREEN_BRIGHTNESS retorna el saveScore del brillo
+                /* Settings.System.SCREEN_BRIGHTNESS retorna el valor del brillo
                  * actual de la pantalla dentro de un rango que va de 0 a 255.
                  * FUENTE: https://developer.android.com/reference/android/provider/Settings.System.html#SCREEN_BRIGHTNESS
                  *
@@ -602,7 +709,8 @@ public class Metricas implements android.hardware.SensorEventListener {
                 porcentajeBrillo = porcentajeBrillo * 100 / 255;
 
                 if (porcentajeBrillo != -1) {
-                    ConstructorXML.adjuntarMetrica("ScreenBrightness", String.valueOf(porcentajeBrillo));
+                    // ConstructorXML.adjuntarMetrica("ScreenBrightness", String.valueOf(porcentajeBrillo));
+                    this.porcentajeBrillo = porcentajeBrillo;
                 }
             }
         } catch(android.provider.Settings.SettingNotFoundException e) {
@@ -614,13 +722,13 @@ public class Metricas implements android.hardware.SensorEventListener {
 
     /**
      * (Métrica QoE) Retorna la intensidad de la señal en dBm.
-     * NOTA: Si el saveScore que recibe de este método es 1, entonces el tipo de
+     * NOTA: Si el valor que recibe de este método es 1, entonces el tipo de
      * conexión que está utilizando el usuario NO es inalámbrica.
      *
      * @return La potencia en dBm de la señal a la que el usuario está
-     * conectado. Retorna 1 si no se puede obtener el saveScore por alguna causa
-     * (esto es así porque el saveScore en dBm de la intensidad de la señal nunca
-     * va a ser mayor que 0, por lo tanto 1 es un saveScore imposible).
+     * conectado. Retorna 1 si no se puede obtener el valor por alguna causa
+     * (esto es así porque el valor en dBm de la intensidad de la señal nunca
+     * va a ser mayor que 0, por lo tanto 1 es un valor imposible).SignalStre
      * @author Ariel Machini
      */
     public int getSignalStrength() {
@@ -631,7 +739,8 @@ public class Metricas implements android.hardware.SensorEventListener {
                 WifiManager wifiManager = (WifiManager) this.contextoAplicacion.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 int dBm = wifiManager.getConnectionInfo().getRssi();
 
-                ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                // ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                this.fuerzaSenial = dBm;
 
                 return dBm;
             } else if (connectivityManager.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_MOBILE) {
@@ -641,25 +750,29 @@ public class Metricas implements android.hardware.SensorEventListener {
                 if (cellInfo instanceof CellInfoLte) {
                     int dBm = ((CellInfoLte) cellInfo).getCellSignalStrength().getDbm();
 
-                    ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                    // ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                    this.fuerzaSenial = dBm;
 
                     return dBm;
                 } else if (cellInfo instanceof CellInfoGsm) {
                     int dBm = ((CellInfoGsm) cellInfo).getCellSignalStrength().getDbm();
 
-                    ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                    // ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                    this.fuerzaSenial = dBm;
 
                     return dBm;
                 } else if (cellInfo instanceof CellInfoCdma) {
                     int dBm = ((CellInfoCdma) cellInfo).getCellSignalStrength().getDbm();
 
-                    ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                    // ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                    this.fuerzaSenial = dBm;
 
                     return dBm;
                 } else if (cellInfo instanceof CellInfoWcdma) {
                     int dBm = ((CellInfoWcdma) cellInfo).getCellSignalStrength().getDbm();
 
-                    ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                    // ConstructorXML.adjuntarMetrica("SignalStrength", String.valueOf(dBm));
+                    this.fuerzaSenial = dBm;
 
                     return dBm;
                 } else {
@@ -694,7 +807,8 @@ public class Metricas implements android.hardware.SensorEventListener {
 
         double memoriaEnUso = (memoryInfo.totalMem / 0x100000L) - (memoryInfo.availMem / 0x100000L);
 
-        ConstructorXML.adjuntarMetrica("MemoryConsumptionMB", String.valueOf(memoriaEnUso));
+        // ConstructorXML.adjuntarMetrica("MemoryConsumptionMB", String.valueOf(memoriaEnUso));
+        this.consumoMemoriaMB = memoriaEnUso;
 
         return memoriaEnUso;
     }
@@ -715,7 +829,8 @@ public class Metricas implements android.hardware.SensorEventListener {
         double memoriaEnUso = (memoryInfo.totalMem / 0x100000L) - (memoryInfo.availMem / 0x100000L);
         double porcentajeEnUso = memoriaEnUso * 100 / (memoryInfo.totalMem / 0x100000L);
 
-        ConstructorXML.adjuntarMetrica("MemoryConsumption", String.valueOf(porcentajeEnUso));
+        // ConstructorXML.adjuntarMetrica("MemoryConsumption", String.valueOf(porcentajeEnUso));
+        this.consumoMemoria = porcentajeEnUso;
 
         return porcentajeEnUso;
     }
@@ -733,11 +848,12 @@ public class Metricas implements android.hardware.SensorEventListener {
         Intent estadoBateria = this.contextoAplicacion.registerReceiver(null, intentFilter);
         int tipoConexion = estadoBateria.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
 
-        boolean estaConectado = (tipoConexion == BatteryManager.BATTERY_PLUGGED_AC || tipoConexion == BatteryManager.BATTERY_PLUGGED_USB || tipoConexion == BatteryManager.BATTERY_PLUGGED_WIRELESS);
+        boolean estaCargando = (tipoConexion == BatteryManager.BATTERY_PLUGGED_AC || tipoConexion == BatteryManager.BATTERY_PLUGGED_USB || tipoConexion == BatteryManager.BATTERY_PLUGGED_WIRELESS);
 
-        ConstructorXML.adjuntarMetrica("PhoneCharging", String.valueOf(estaConectado));
+        // ConstructorXML.adjuntarMetrica("PhoneCharging", String.valueOf(estaCargando));
+        this.estaCargando = String.valueOf(estaCargando);
 
-        return estaConectado;
+        return estaCargando;
     }
 
     /**
@@ -751,7 +867,8 @@ public class Metricas implements android.hardware.SensorEventListener {
     public boolean isPhoneConnected() {
         boolean isPhoneConnected = this.isActiveNetworkInfoNotNull();
 
-        ConstructorXML.adjuntarMetrica("PhoneConnectedToANetwork", String.valueOf(isPhoneConnected));
+        // ConstructorXML.adjuntarMetrica("PhoneConnectedToANetwork", String.valueOf(isPhoneConnected));
+        this.estaConectado = String.valueOf(isPhoneConnected);
 
         return isPhoneConnected;
     }
@@ -789,15 +906,11 @@ public class Metricas implements android.hardware.SensorEventListener {
      * @see #perceivedLatencyBegin()
      */
     public long perceivedLatencyStop() {
-        if (this.latenciaPercibidaUsuario != Integer.MIN_VALUE) {
+        if (this.latenciaPercibidaUsuario != -1) {
             long latenciaPercibidaFinal = (System.currentTimeMillis() - this.latenciaPercibidaUsuario) / 1000;
 
-            ConstructorXML.adjuntarMetrica("UserPerceivedLatency", String.valueOf(latenciaPercibidaFinal));
-
-            /* Se restaura el saveScore de esta variable para que en posteriores
-             * ejecuciones de la misma métrica no se pueda llamar a este
-             * método sin antes llamar a perceivedLatencyBegin(). */
-            this.latenciaPercibidaUsuario = Integer.MIN_VALUE;
+            // ConstructorXML.adjuntarMetrica("UserPerceivedLatency", String.valueOf(latenciaPercibidaFinal));
+            this.latenciaPercibidaUsuario = latenciaPercibidaFinal;
 
             return latenciaPercibidaFinal;
         } else {
@@ -852,7 +965,71 @@ public class Metricas implements android.hardware.SensorEventListener {
     private void saveScore(CharSequence i) {
         Log.d("Calificación asignada", String.valueOf(i));
 
-        ConstructorXML.adjuntarMetrica("UserScore", String.valueOf(i));
+        this.calificacionUsuario = String.valueOf(i);
+
+        if (this.porcentajeCargaBateria != -1) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "BatteryCharge", String.valueOf(this.porcentajeCargaBateria));
+        }
+
+        if (this.tipoConexion != null) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "ConnectionType", this.tipoConexion);
+        }
+
+        if (this.usoCPU != -1) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "CPUConsumption", String.valueOf(this.usoCPU));
+        }
+
+        ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "EnvironmentLight", String.valueOf(this.lux));
+
+        if (this.jitter != -1) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "Jitter", String.valueOf(this.jitter));
+        }
+
+        ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "Latency", String.valueOf(this.latencia));
+
+        if (this.consumoMemoria != -1) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "MemoryConsumption", String.valueOf(this.consumoMemoria));
+        }
+
+        if (this.consumoMemoriaMB != -1) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "MemoryConsumptionMB", String.valueOf(this.consumoMemoriaMB));
+        }
+
+        if (this.paquetesPerdidos != -1) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "PacketLoss", String.valueOf(this.paquetesPerdidos));
+        }
+
+        if (this.estaCargando != null) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "PhoneCharging", this.estaCargando);
+        }
+
+        if (this.estaConectado != null) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "PhoneConnectedToANetwork", this.estaConectado);
+        }
+
+        ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "Proximity", String.valueOf(this.proximidad));
+
+        if (this.porcentajeBrillo != -1) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "ScreenBrightness", String.valueOf(this.porcentajeBrillo));
+        }
+
+        if (this.fuerzaSenial != 1) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "SignalStrength", String.valueOf(this.fuerzaSenial));
+        }
+
+        if (this.latenciaPercibidaUsuario != -1) {
+            ConstructorXML.adjuntarMetrica(this.calificacionUsuario, "UserPerceivedLatency", String.valueOf(this.latenciaPercibidaUsuario));
+        }
+
+        // this.upload(); ToDo: ¿Debería llamarse acá?
+    }
+
+    public void upload() {
+        new Thread(new Runnable() {
+            public void run() {
+                new WebServiceClient(contextoAplicacion).execute();
+            }
+        }).start();
     }
 
 }
