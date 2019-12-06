@@ -439,9 +439,8 @@ public class Metricas implements android.hardware.SensorEventListener {
                         latencias.add(milisegundos);
                     }
                 } else if (codigoSalida == 1) {
-                    ConstructorXML.adjuntarMetrica("Jitter", "Sin respuesta");
-
-                    return -1;
+                    // ConstructorXML.adjuntarMetrica("Jitter", "Sin respuesta");
+                    jitter = -1;
                 } else {
                     Log.e("Error", "Ocurrió un error durante la ejecución del proceso «getJitter» (cód. " + codigoSalida + ").");
 
@@ -515,8 +514,6 @@ public class Metricas implements android.hardware.SensorEventListener {
                 } else if (codigoSalida == 1) {
                     // ConstructorXML.adjuntarMetrica("Latency", "Sin respuesta");
                     milisegundos = -1;
-
-                    return -1;
                 } else {
                     Log.e("Error", "Ocurrió un error durante la ejecución del proceso «getLatency» (cód. " + codigoSalida + ").");
 
